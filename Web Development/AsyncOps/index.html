@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            align-items: center;
+            background: radial-gradient(125% 125% at -2% 101%,
+                    rgba(245, 87, 2, 1) 10.5%,
+                    rgba(245, 120, 2, 1) 16%,
+                    rgba(245, 140, 2, 1) 17.5%,
+                    rgba(245, 170, 100, 1) 25%,
+                    rgba(238, 174, 202, 1) 40%,
+                    rgba(202, 179, 214, 1) 65%,
+                    rgba(148, 201, 233, 1) 100%);
+            background-color: rgb(82, 50, 178);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            font-family: sans-serif;
+            justify-content: center;
+            height: 100%;
+            margin: 0;
+            padding: 20px;
+            transition: background-image 0.5s ease-in-out;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 5em;
+            margin: 5%;
+            position: absolute;
+            top: 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        button {
+            background-color: #4b2fc5;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            padding: 10px 20px;
+        }
+
+        button:hover {
+            background-color: #361d85;
+        }
+
+        button,
+        input {
+            font-family: inherit;
+            font-size: 100%;
+            outline: none;
+        }
+
+        .card {
+            -webkit-backdrop-filter: blur(10px);
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: fit-content;
+            min-height: 45vh;
+            min-width: 20vw;
+            padding: 20px;
+            text-align: center;
+            width: fit-content;
+        }
+
+        .cardContainer {
+            margin-top: 20px;
+        }
+
+        .city {
+            font-size: xx-large;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        html,
+        body {
+            -webkit-user-select: none;
+            font-family: sans-serif;
+            height: 100%;
+            user-select: none;
+            width: 100%;
+        }
+
+        img {
+            display: block;
+            height: 50%;
+            max-width: 100%;
+            position: relative;
+        }
+
+        input {
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 8px;
+            text-align: center;
+            width: 200px;
+        }
+
+        .max,
+        .min {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .maxHeading,
+        .minHeading {
+            font-size: 0.9em;
+            margin: 0;
+        }
+
+        .maxTemp,
+        .minTemp {
+            font-size: 1.2em;
+            font-weight: bolder;
+            margin: 0;
+        }
+
+        .minmaxContainer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .temp {
+            font-size: 5em;
+            font-weight: bolder;
+            margin: 10px 0;
+        }
+
+        .weather {
+            font-size: 1.2em;
+            margin: 5px 0;
+            text-transform: capitalize;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Consulta de Clima</h1>
+    <div>
+        <input type="text" id="city" placeholder="Digite a cidade" />
+        <button id="search">Buscar</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function getWeatherReport() {
+            const OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
+            const local = document.getElementById("city").value || "São Paulo";
+            const params = {
+                appid: "YOUR_API_KEY",
+                lang: "pt_br",
+                q: local,
+                units: "metric"
+            };
+            try {
+                document.getElementById("city").value = ""
+                const { data } = await axios.get(OPENWEATHER_BASE_URL, { params });
+
+                const UNSPLASH_BASE_URL = `https://api.unsplash.com/search/photos`;
+                const unsplashParams = {
+                    client_id: "YOUR_API_KEY",
+                    orientation: "landscape",
+                    per_page: 1,
+                    query: `${local}`,
+                };
+
+                const unsplashResponse = await axios.get(UNSPLASH_BASE_URL, { params: unsplashParams });
+                if (unsplashResponse.data.results.length > 0) {
+                    const imageUrl = unsplashResponse.data.results[0].urls.full;
+                    document.body.style.backgroundImage = `url('${imageUrl}')`;
+                }
+                document.getElementById("result").innerHTML = `
+                <div class="cardContainer">
+                <div class="card">
+                    <p class="city">${data.name}</p>
+                    <img src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="${data.weather[0].description}" />
+                    <p class="weather">${data.weather[0].description}</p>
+                    <p class="temp">${Math.round(data.main.temp)}</p>
+                    <p >Celsius</p>
+
+                    <div class="minmaxContainer">
+                    <div class="min">
+                        <p class="minHeading">Min</p>
+                        <p class="minTemp">${Math.round(data.main.temp_min)}°C</p>
+                    </div>
+                    <div class="max">
+                        <p class="maxHeading">Max</p>
+                        <p class="maxTemp">${Math.round(data.main.temp_max)}°C</p>
+                    </div>
+                    </div>
+                </div>
+                </div>
+                `;
+            } catch (error) {
+                document.getElementById("result")
+                    .innerText = "Error searching weather";
+            }
+        }
+        document.getElementById("search").addEventListener("click", getWeatherReport);
+        document.getElementById("city")
+            .addEventListener("keypress", function (event) {
+                if (event.key === "Enter") getWeatherReport();
+            });
+    </script>
+</body>
+
+</html>
